@@ -66,12 +66,12 @@
         protected $_lastException = null;
 
         /**
-         * _logClosure
+         * _logFunction
          * 
          * @access  protected
          * @var     null|callable (default: null)
          */
-        protected $_logClosure = null;
+        protected $_logFunction = null;
 
         /**
          * _maxAttempts
@@ -244,13 +244,13 @@
             if ($this->_quiet === true) {
                 return false;
             }
-            if ($this->_logClosure === null) {
+            if ($this->_logFunction === null) {
                 foreach ($values as $value) {
                     error_log($value);
                 }
                 return false;
             }
-            $closure = $this->_logClosure;
+            $closure = $this->_logFunction;
             $args = $values;
             call_user_func_array($closure, $args);
             return true;
@@ -433,15 +433,27 @@
         }
 
         /**
-         * setLogClosure
+         * setDelayMultiplier
          * 
          * @access  public
-         * @param   callable $closure
+         * @param   null|int $delayMultiplier
          * @return  void
          */
-        public function setLogClosure(callable $closure): void
+        public function setDelayMultiplier(?int $delayMultiplier): void
         {
-            $this->_logClosure = $closure;
+            $this->_delayMultiplier = $delayMultiplier ?? $this->_delayMultiplier;
+        }
+
+        /**
+         * setLogFunction
+         * 
+         * @access  public
+         * @param   callable $logFunction
+         * @return  void
+         */
+        public function setLogFunction(callable $logFunction): void
+        {
+            $this->_logFunction = $logFunction;
         }
 
         /**
