@@ -35,13 +35,15 @@ echo $attemptResponse;
 exit(0);
 ```
 
-### Sample Call (w/ callable & log closure)
+### Sample Call (w/ callable log function)
 
 ``` php
-$closure = array('className', 'methodName');
-$logging = array('error_log');
+$closure = function() {
+    echo $test;
+};
+$logFunction = array('error_log');
 $riskyClosure = new RiskyClosure\Base($closure);
-$riskyClosure->setLogClosure($logging);
+$riskyClosure->setLogFunction($logFunction);
 $attemptResponse = $riskyClosure->attempt();
 echo $attemptResponse;
 exit(0);
