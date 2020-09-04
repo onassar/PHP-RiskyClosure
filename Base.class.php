@@ -56,6 +56,14 @@
         protected $_delayMultiplier = 1.25;
 
         /**
+         * _exceptions
+         * 
+         * @access  protected
+         * @var     array (default: array())
+         */
+        protected $_exceptions = array();
+
+        /**
          * _lastException
          * 
          * A reference to the last exception that was thrown/triggered while
@@ -158,12 +166,13 @@
             try {
                 $closure = $this->_closure;
                 $args = array();
-                $response = call_user_func($closure, $args);
+                $response = call_user_func_array($closure, $args);
                 $this->_restoreErrorHandler();
                 $attemptResponse = array(null, $response);
                 return $attemptResponse;
             } catch (\Exception $exception) {
                 $this->_lastException = $exception;
+                array_push($this->_exceptions, $exception);
             }
             $this->_restoreErrorHandler();
             $attemptResponse = array($exception, null);
@@ -218,6 +227,7 @@
         protected function _getTrace(): array
         {
             $exception = new \Exception();
+            $exception = $this->_lastException ?? $exception;
             $trace = $exception->getTraceAsString();
             $trace = explode("\n", $trace);
             return $trace;
@@ -397,7 +407,8 @@
         protected function _setErrorHandler(): void
         {
             set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext) {
-                throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+                $args = array($errstr, 0, $errno, $errfile, $errline);
+                throw new \ErrorException(... $args);
             });
         }
 
