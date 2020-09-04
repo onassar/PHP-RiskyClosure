@@ -76,6 +76,19 @@
         protected $_logFunction = null;
 
         /**
+         * _logTraceFunction
+         * 
+         * callable that is only used when an attempt completely fails and the
+         * trace ought to be logged. This is useful for being able to route
+         * failed attempts (with the trace) to a specific logging function or
+         * to do more detailed error handling (eg. email or log the trace).
+         * 
+         * @access  protected
+         * @var     null|callable (default: null)
+         */
+        protected $_logTraceFunction = null;
+
+        /**
          * _maxAttempts
          * 
          * The maximum number of times a closure should be attempted before
@@ -288,9 +301,8 @@
         {
             $msg = 'onassar\\RiskyClosure\\Base failed';
             $this->_log($msg);
-            // $trace = $this->_getTrace();
-            // $backtrace = Utils\Data::getBacktrace($exception);
-            // Utils\Log::logToFile('riskyClosure', $trace);
+            $trace = $this->_getTrace();
+            $this->_logTrace($trace);
             return true;
         }
 
@@ -322,6 +334,29 @@
             }
             $msg = 'Subsequent success on attempt #' . ($currentAttempt);
             $this->_log($msg);
+            return true;
+        }
+
+        /**
+         * _logTrace
+         * 
+         * @access  protected
+         * @param   array $trace
+         * @return  bool
+         */
+        protected function _logTrace(array $trace): bool
+        {
+            if ($this->_quiet === true) {
+                return false;
+            }
+            if ($this->_logTraceFunction === null) {
+                $trace = implode("\n", $trace);
+                error_log($trace);
+                return false;
+            }
+            $closure = $this->_logTraceFunction;
+            $args = array($trace);
+            call_user_func_array($closure, $args);
             return true;
         }
 
@@ -456,6 +491,18 @@
         public function setLogFunction(callable $logFunction): void
         {
             $this->_logFunction = $logFunction;
+        }
+
+        /**
+         * setLogTraceFunction
+         * 
+         * @access  public
+         * @param   callable $logTraceFunction
+         * @return  void
+         */
+        public function setLogTraceFunction(callable $logTraceFunction): void
+        {
+            $this->_logTraceFunction = $logTraceFunction;
         }
 
         /**
