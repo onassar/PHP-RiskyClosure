@@ -6,6 +6,8 @@
     /**
      * Base
      * 
+     * @link    https://github.com/onassar/PHP-RiskyClosure
+     * @author  Oliver Nassar <onassar@gmail.com>
      */
     class Base
     {
