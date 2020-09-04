@@ -84,19 +84,6 @@
         protected $_logFunction = null;
 
         /**
-         * _logTraceFunction
-         * 
-         * callable that is only used when an attempt completely fails and the
-         * trace ought to be logged. This is useful for being able to route
-         * failed attempts (with the trace) to a specific logging function or
-         * to do more detailed error handling (eg. email or log the trace).
-         * 
-         * @access  protected
-         * @var     null|callable (default: null)
-         */
-        protected $_logTraceFunction = null;
-
-        /**
          * _maxAttempts
          * 
          * The maximum number of times a closure should be attempted before
@@ -117,6 +104,19 @@
          * @var     bool (default: false)
          */
         protected $_quiet = false;
+
+        /**
+         * _traceLogFunction
+         * 
+         * callable that is only used when an attempt completely fails and the
+         * trace ought to be logged. This is useful for being able to route
+         * failed attempts (with the trace) to a specific logging function or
+         * to do more detailed error handling (eg. email or log the trace).
+         * 
+         * @access  protected
+         * @var     null|callable (default: null)
+         */
+        protected $_traceLogFunction = null;
 
         /**
          * _useDelayMultiplier
@@ -230,6 +230,10 @@
             $exception = $this->_lastException ?? $exception;
             $trace = $exception->getTraceAsString();
             $trace = explode("\n", $trace);
+            $trace = array_reverse($trace);
+            foreach ($trace as &$frame) {
+                $frame = preg_replace('/^#[0-9]+ /', '', $frame);
+            }
             return $trace;
         }
 
@@ -359,13 +363,13 @@
             if ($this->_quiet === true) {
                 return false;
             }
-            if ($this->_logTraceFunction === null) {
+            if ($this->_traceLogFunction === null) {
                 $trace = implode("\n", $trace);
                 error_log($trace);
                 return false;
             }
-            $closure = $this->_logTraceFunction;
-            $args = array($trace);
+            $closure = $this->_traceLogFunction;
+            $args = array($trace, $this);
             call_user_func_array($closure, $args);
             return true;
         }
@@ -505,18 +509,6 @@
         }
 
         /**
-         * setLogTraceFunction
-         * 
-         * @access  public
-         * @param   callable $logTraceFunction
-         * @return  void
-         */
-        public function setLogTraceFunction(callable $logTraceFunction): void
-        {
-            $this->_logTraceFunction = $logTraceFunction;
-        }
-
-        /**
          * setMaxAttempts
          * 
          * @access  public
@@ -538,5 +530,17 @@
         public function setQuiet(?bool $quiet): void
         {
             $this->_quiet = $quiet ?? $this->_quiet;
+        }
+
+        /**
+         * setTraceLogFunction
+         * 
+         * @access  public
+         * @param   callable $traceLogFunction
+         * @return  void
+         */
+        public function setTraceLogFunction(callable $traceLogFunction): void
+        {
+            $this->_traceLogFunction = $traceLogFunction;
         }
     }
