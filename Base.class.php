@@ -34,17 +34,25 @@
         protected $_currentAttempt = 0;
 
         /**
-         * _delay
+         * _exceptions
          * 
-         * The delay (in milliseconds) to wait between closure attempts.
+         * @access  protected
+         * @var     array (default: array())
+         */
+        protected $_exceptions = array();
+
+        /**
+         * _failedAttemptDelay
+         * 
+         * The delay (in milliseconds) to wait between failed closure attempts.
          * 
          * @access  protected
          * @var     int (default: 2000)
          */
-        protected $_delay = 2000;
+        protected $_failedAttemptDelay = 2000;
 
         /**
-         * _delayMultiplier
+         * _failedAttemptDelayMultiplier
          * 
          * Multiplier (stored as a float) which is used to determine delays
          * between closure reattempts. This is used to give some "breathing"
@@ -53,15 +61,7 @@
          * @access  protected
          * @var     float (default: 1.25)
          */
-        protected $_delayMultiplier = 1.25;
-
-        /**
-         * _exceptions
-         * 
-         * @access  protected
-         * @var     array (default: array())
-         */
-        protected $_exceptions = array();
+        protected $_failedAttemptDelayMultiplier = 1.25;
 
         /**
          * _lastException
@@ -117,14 +117,6 @@
          * @var     null|callable (default: null)
          */
         protected $_traceLogFunction = null;
-
-        /**
-         * _useDelayMultiplier
-         * 
-         * @access  protected
-         * @var     bool (default: true)
-         */
-        protected $_useDelayMultiplier = true;
 
         /**
          * __construct
@@ -203,19 +195,16 @@
          */
         protected function _getSleepDelay(): float
         {
-            $delay = $this->_delay;
+            $failedAttemptDelay = $this->_failedAttemptDelay;
             $currentAttempt = $this->_currentAttempt;
             if ($currentAttempt === 1) {
-                return $delay;
+                return $failedAttemptDelay;
             }
-            if ($this->_useDelayMultiplier === false) {
-                return $delay;
-            }
-            $delayMultiplier = $this->_delayMultiplier;
+            $failedAttemptDelayMultiplier = $this->_failedAttemptDelayMultiplier;
             $exp = $currentAttempt - 1;
-            $delay = ($delay) * pow($delayMultiplier, $exp);
-            $delay = floor($delay);
-            return $delay;
+            $failedAttemptDelay = ($failedAttemptDelay) * pow($failedAttemptDelayMultiplier, $exp);
+            $failedAttemptDelay = floor($failedAttemptDelay);
+            return $failedAttemptDelay;
         }
 
         /**
@@ -328,8 +317,8 @@
          */
         protected function _logFailedAttemptSleep(): bool
         {
-            $delay = $this->_getSleepDelay();
-            $msg = 'Going to sleep for ' . ($delay);
+            $sleepDelay = $this->_getSleepDelay();
+            $msg = 'Going to sleep for ' . ($sleepDelay);
             $this->_log($msg);
             return true;
         }
@@ -424,8 +413,8 @@
          */
         protected function _sleep(): void
         {
-            $delay = $this->_getSleepDelay();
-            usleep($delay * 1000);
+            $sleepDelay = $this->_getSleepDelay();
+            usleep($sleepDelay * 1000);
         }
 
         /**
@@ -473,27 +462,27 @@
         }
 
         /**
-         * setDelay
+         * setFailedAttemptDelay
          * 
          * @access  public
-         * @param   null|int $delay
+         * @param   null|int $failedAttemptDelay
          * @return  void
          */
-        public function setDelay(?int $delay): void
+        public function setFailedAttemptDelay(?int $failedAttemptDelay): void
         {
-            $this->_delay = $delay ?? $this->_delay;
+            $this->_failedAttemptDelay = $failedAttemptDelay ?? $this->_failedAttemptDelay;
         }
 
         /**
-         * setDelayMultiplier
+         * setFailedAttemptDelayMultiplier
          * 
          * @access  public
-         * @param   null|int $delayMultiplier
+         * @param   null|int $failedAttemptDelayMultiplier
          * @return  void
          */
-        public function setDelayMultiplier(?int $delayMultiplier): void
+        public function setFailedAttemptDelayMultiplier(?int $failedAttemptDelayMultiplier): void
         {
-            $this->_delayMultiplier = $delayMultiplier ?? $this->_delayMultiplier;
+            $this->_failedAttemptDelayMultiplier = $failedAttemptDelayMultiplier ?? $this->_failedAttemptDelayMultiplier;
         }
 
         /**

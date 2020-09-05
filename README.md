@@ -2,12 +2,12 @@
 Provides a utility class which is used for attempting calls to code that may be unreliable (eg. 3rd party SDKs, remote requests, etc).
 
 Features include:
-- Calling closures and callable functions/methods
 - Delays between failed attempts
 - Multiplier for increasing delays between failed attempts
 - Exception access
 - Specifying maximum number of attempts
 - Defining a log closure to make handling logging application-specific
+- Defining a trace log closure to make handling logging application-specific
 
 ### Sample Call
 
