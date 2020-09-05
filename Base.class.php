@@ -190,6 +190,15 @@
         /**
          * _getSleepDelay
          * 
+         * Returns the number of milliseconds that any sleep call should wait
+         * between failed attempts, which is based on a multiplier.
+         * 
+         * For example, after the first failed attempt, it waits whatever the
+         * defined $failedAttemptDelay is. After that, it uses the attempt
+         * count to increase exponentially how long it waits. The logic is that
+         * if an attempt fails multiple times, we want to give the receiving
+         * server a bit more time after each attempt to respond.
+         * 
          * @access  protected
          * @return  float
          */
@@ -318,7 +327,7 @@
         protected function _logFailedAttemptSleep(): bool
         {
             $sleepDelay = $this->_getSleepDelay();
-            $msg = 'Going to sleep for ' . ($sleepDelay);
+            $msg = 'Going to sleep for ' . ($sleepDelay) . 'ms';
             $this->_log($msg);
             return true;
         }
