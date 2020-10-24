@@ -64,6 +64,14 @@
         protected $_failedAttemptDelayMultiplier = 1.25;
 
         /**
+         * _failedAttemptLoggingEvaluator
+         * 
+         * @access  protected
+         * @var     null|callable (default: null)
+         */
+        protected $_failedAttemptLoggingEvaluator = null;
+
+        /**
          * _lastException
          * 
          * A reference to the last exception that was thrown/triggered while
@@ -236,12 +244,12 @@
         }
 
         /**
-         * _handleFailedClosureAttempt
+         * _handleFailedClosureAttempts
          * 
          * @access  protected
          * @return  void
          */
-        protected function _handleFailedClosureAttempt(): void
+        protected function _handleFailedClosureAttempts(): void
         {
             $this->_logFailedAttempt();
             $this->_currentAttempt = 0;
@@ -291,6 +299,10 @@
          */
         protected function _logFailedAttempt(): bool
         {
+            $valid = $this->_validFailedAttemptLog();
+            if ($valid === false) {
+                return false;
+            }
             $msg = $this->_getFailedClosureAttemptLogMessage();
             $this->_log($msg);
             $exception = $this->_lastException;
@@ -304,21 +316,6 @@
         }
 
         /**
-         * _logFailedFinalAttempt
-         * 
-         * @access  protected
-         * @return  bool
-         */
-        protected function _logFailedFinalAttempt(): bool
-        {
-            $msg = 'onassar\\RiskyClosure\\Base failed';
-            $this->_log($msg);
-            $trace = $this->_getTrace();
-            $this->_logTrace($trace);
-            return true;
-        }
-
-        /**
          * _logFailedAttemptSleep
          * 
          * @access  protected
@@ -326,9 +323,29 @@
          */
         protected function _logFailedAttemptSleep(): bool
         {
+            $valid = $this->_validFailedAttemptLog();
+            if ($valid === false) {
+                return false;
+            }
             $sleepDelay = $this->_getSleepDelay();
             $msg = 'Going to sleep for ' . ($sleepDelay) . 'ms';
             $this->_log($msg);
+            return true;
+        }
+
+        /**
+         * _logFailedFinalAttempt
+         * 
+         * @access  protected
+         * @return  bool
+         */
+        protected function _logFailedFinalAttempt(): bool
+        {
+            $className = get_called_class();
+            $msg = ($className) . ' failed';
+            $this->_log($msg);
+            $trace = $this->_getTrace();
+            $this->_logTrace($trace);
             return true;
         }
 
@@ -427,6 +444,23 @@
         }
 
         /**
+         * _validFailedAttemptLog
+         * 
+         * @access  protected
+         * @return  bool
+         */
+        protected function _validFailedAttemptLog(): bool
+        {
+            $callback = $this->_failedAttemptLoggingEvaluator;
+            if ($callback === null) {
+                return true;
+            }
+            $params = array($this);
+            $valid = call_user_func_array($callback, $params);
+            return $valid;
+        }
+
+        /**
          * attempt
          * 
          * Acts as wrapper for the above protected method, however also handles
@@ -451,11 +485,23 @@
             // Handle failed attempt
             $finalFailedClosureAttempt = $this->_currentAttempt === $this->_maxAttempts;
             if ($finalFailedClosureAttempt === true) {
-                $this->_handleFailedClosureAttempt();
+                $this->_handleFailedClosureAttempts();
                 return $closureAttemptResponse;
             }
             $closureAttemptResponse = $this->_reattemptClosure();
             return $closureAttemptResponse;
+        }
+
+        /**
+         * getCurrentAttempt
+         * 
+         * @access  public
+         * @return  int
+         */
+        public function getCurrentAttempt(): int
+        {
+            $currentAttempt = $this->_currentAttempt;
+            return $currentAttempt;
         }
 
         /**
@@ -468,6 +514,18 @@
         {
             $exception = $this->_lastException;
             return $exception;
+        }
+
+        /**
+         * getMaxAttempts
+         * 
+         * @access  public
+         * @return  int
+         */
+        public function getMaxAttempts(): int
+        {
+            $maxAttempts = $this->_maxAttempts;
+            return $maxAttempts;
         }
 
         /**
@@ -492,6 +550,18 @@
         public function setFailedAttemptDelayMultiplier(?int $failedAttemptDelayMultiplier): void
         {
             $this->_failedAttemptDelayMultiplier = $failedAttemptDelayMultiplier ?? $this->_failedAttemptDelayMultiplier;
+        }
+
+        /**
+         * setFailedAttemptLoggingEvaluator
+         * 
+         * @access  public
+         * @param   null|callable $callback
+         * @return  void
+         */
+        public function setFailedAttemptLoggingEvaluator(?callable $callback): void
+        {
+            $this->_failedAttemptLoggingEvaluator = $callback;
         }
 
         /**
