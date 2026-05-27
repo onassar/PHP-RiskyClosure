@@ -426,6 +426,15 @@
         protected function _setErrorHandler(): void
         {
             set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext = array()) {
+
+            // --- BEGIN PHP 8.x deprecation suppression (safe to remove) ---
+            // Honour the active error_reporting() mask (eg. {E_ALL} & ~{E_DEPRECATED})
+            // so vendor-origin deprecations aren't promoted to fatal exceptions.
+            // Delete this block to restore the original "every error is fatal".
+            if ((error_reporting() & $errno) === 0) {
+                return;
+            }
+            // --- END PHP 8.x deprecation suppression ---
                 $args = array($errstr, 0, $errno, $errfile, $errline);
                 throw new \ErrorException(... $args);
             });
