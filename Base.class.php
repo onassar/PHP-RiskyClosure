@@ -425,7 +425,7 @@
          */
         protected function _setErrorHandler(): void
         {
-            set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext) {
+            set_error_handler(function($errno, $errstr, $errfile, $errline, $errcontext = array()) {
                 $args = array($errstr, 0, $errno, $errfile, $errline);
                 throw new \ErrorException(... $args);
             });
